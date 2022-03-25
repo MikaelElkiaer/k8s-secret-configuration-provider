@@ -1,0 +1,26 @@
+name: NuGet Publish
+
+on:
+  push:
+    branches: [ master ]
+
+jobs:
+  nuget-publish:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v1
+      with:
+        source-url: https://api.nuget.org/v3/index.json
+        dotnet-version: 3.1.412
+      env:
+        NUGET_AUTH_TOKEN: ${{secrets.NUGET_TOKEN}}
+    - name: Restore dependencies
+      run: dotnet restore
+    - name: Publish
+      run: |
+        mkdir __out
+        dotnet pack -c Release -o __out --no-restore MikaelElkiaer.Extensions.Configuration.KubernetesSecrets
+        dotnet nuget push "./__out/*.nupkg" --skip-duplicate --no-symbols true --api-key ${{secrets.NUGET_TOKEN}}
+        rm -rf __out
